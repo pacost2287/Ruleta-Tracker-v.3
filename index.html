@@ -6,9 +6,15 @@
     <style>
         body { margin: 0; background: #0b4e1c; color: white; font-family: sans-serif; display: flex; flex-direction: column; height: 100vh; }
         /* Se invierte el orden: 1 columna de docenas, 3 columnas para números */
-        #mesa { display: grid; grid-template-columns: 1fr repeat(3, 1fr); grid-template-rows: auto repeat(12, 1fr) auto; gap: 2px; padding: 5px; flex-grow: 1; }
-        .c { display: flex; flex-direction: column; align-items: center; justify-content: center; border: 1px solid #fff; cursor: pointer; font-weight: bold; min-height: 40px; }
-        .zero { grid-column: span 4; background: #27ae60; }
+        #mesa { 
+    display: grid; 
+    /* Fijamos 70px para las docenas y dejamos el resto repartido */
+    grid-template-columns: 70px 1fr 1fr 1fr; 
+    grid-template-rows: auto repeat(12, 1fr) auto; 
+    gap: 2px; 
+    padding: 5px; 
+    flex-grow: 1; 
+        }
         
         /* Números 1-36 se ubican automáticamente en las columnas 2, 3 y 4 */
         .num-cell { grid-column: span 1; }
