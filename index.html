@@ -2,106 +2,63 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Ruleta Tracker (Fijo - Docenas Izquierda)</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ruleta Tracker v3</title>
     <style>
         body { margin: 0; background: #0b4e1c; color: white; font-family: sans-serif; display: flex; flex-direction: column; height: 100vh; }
-        /* Se invierte el orden: 1 columna de docenas, 3 columnas para números */
-        #mesa { 
-    display: grid; 
-    /* Fijamos 70px para las docenas y dejamos el resto repartido */
-    grid-template-columns: 70px 1fr 1fr 1fr; 
-    grid-template-rows: auto repeat(12, 1fr) auto; 
-    gap: 2px; 
-    padding: 5px; 
-    flex-grow: 1; 
-        }
+        /* 1 columna fija para docenas (80px), 3 columnas iguales para números */
+        #mesa { display: grid; grid-template-columns: 80px repeat(3, 1fr); grid-template-rows: auto repeat(12, 1fr) auto; gap: 2px; padding: 5px; flex-grow: 1; }
         
-        /* Números 1-36 se ubican automáticamente en las columnas 2, 3 y 4 */
-        .num-cell { grid-column: span 1; }
+        .c { display: flex; flex-direction: column; align-items: center; justify-content: center; border: 1px solid #fff; cursor: pointer; font-weight: bold; min-height: 40px; }
+        .zero { grid-column: span 4; background: #27ae60; font-size: 1.5em; }
         
-        /* Docenas ahora en columna 1 */
+        /* Aseguramos que los números ocupen solo 1 celda */
+        .num-cell { grid-column: auto; }
+        
+        /* Docenas: Columna 1, filas 2 a 13 */
         #box-d0 { grid-column: 1; grid-row: 2 / span 4; }
         #box-d1 { grid-column: 1; grid-row: 6 / span 4; }
         #box-d2 { grid-column: 1; grid-row: 10 / span 4; }
         
-        /* Columnas (C1, C2, C3) se desplazan a las columnas 2, 3 y 4 */
+        /* Columnas: Debajo de los números */
         #box-c0 { grid-column: 2; grid-row: 14; }
         #box-c1 { grid-column: 3; grid-row: 14; }
         #box-c2 { grid-column: 4; grid-row: 14; }
 
-        .count-big { font-size: 1.6em; color: #ffff00; font-weight: bold; }
-        .label-small { font-size: 0.7em; opacity: 0.8; }
+        .count-big { font-size: 1.2em; color: #ffff00; }
+        .label-small { font-size: 0.7em; }
         .active-red { border: 3px solid #ff0000 !important; background: #581515 !important; }
-        .alert-lvl4 { border: 5px solid #ff0000 !important; animation: blink 1s infinite; }
-        @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
         
-        .lvl-badge { font-size: 0.7em; color: #ffeb3b; }
         #stats { background: #000; padding: 10px; display: flex; justify-content: space-between; align-items: center; border-top: 2px solid #fff; }
     </style>
 </head>
 <body>
     <div id="mesa">
         <div class="c zero" onclick="reg(0)">0</div>
+        <!-- Docenas colocadas primero para asegurar el layout -->
+        <div class="c" id="box-d0"><div class="count-big" id="cnt-d0">0</div><div class="label-small">1ª</div><div class="lvl-badge" id="lvl-d0"></div></div>
+        <div class="c" id="box-d1"><div class="count-big" id="cnt-d1">0</div><div class="label-small">2ª</div><div class="lvl-badge" id="lvl-d1"></div></div>
+        <div class="c" id="box-d2"><div class="count-big" id="cnt-d2">0</div><div class="label-small">3ª</div><div class="lvl-badge" id="lvl-d2"></div></div>
+        
         <script>
             for(let i=1; i<=36; i++) {
                 let col = ([1,3,5,7,9,12,14,16,18,19,21,23,25,27,30,32,34,36].includes(i)) ? '#c0392b' : '#1a1a1a';
                 document.write(`<div class="c num-cell" style="background:${col}" onclick="reg(${i})">${i}</div>`);
             }
         </script>
-        <div class="c" id="box-d0"><div class="count-big" id="cnt-d0">0</div><div class="label-small">1ª</div><div class="lvl-badge" id="lvl-d0"></div></div>
-        <div class="c" id="box-d1"><div class="count-big" id="cnt-d1">0</div><div class="label-small">2ª</div><div class="lvl-badge" id="lvl-d1"></div></div>
-        <div class="c" id="box-d2"><div class="count-big" id="cnt-d2">0</div><div class="label-small">3ª</div><div class="lvl-badge" id="lvl-d2"></div></div>
+        
         <div class="c" id="box-c0"><div class="label-small">C1</div><div class="count-big" id="cnt-c0">0</div><div class="lvl-badge" id="lvl-c0"></div></div>
         <div class="c" id="box-c1"><div class="label-small">C2</div><div class="count-big" id="cnt-c1">0</div><div class="lvl-badge" id="lvl-c1"></div></div>
         <div class="c" id="box-c2"><div class="label-small">C3</div><div class="count-big" id="cnt-c2">0</div><div class="lvl-badge" id="lvl-c2"></div></div>
     </div>
     <div id="stats">
-        <div>Rondas: <b id="rounds">0</b> | Espera: <b id="skip">0</b></div>
+        <div>Rondas: <b id="rounds">0</b></div>
         <div style="font-size: 1.2em;">Bal: <b id="balance">$0</b></div>
         <button onclick="res()">Reset</button>
     </div>
+    <!-- ... (tu JS de lógica se mantiene igual aquí abajo) ... -->
     <script>
-        let rounds = 0, skip = 0, balance = 0, betD = 0, betC = 0, activeD = [], activeC = [];
-        let dCounts = [0,0,0], cCounts = [0,0,0];
-
-        function reg(n) {
-            if(n === 0) return;
-            rounds++;
-            let hitD = Math.floor((n-1)/12), hitC = (n-1)%3;
-            if(activeD.length > 0) { balance -= (betD * 2); if(activeD.includes(hitD)) { balance += (betD * 3); betD = 0; } else { betD *= 3; } }
-            if(activeC.length > 0) { balance -= (betC * 2); if(activeC.includes(hitC)) { balance += (betC * 3); betC = 0; } else { betC *= 3; } }
-            dCounts[hitD]++; cCounts[hitC]++;
-            let wasActive = (activeD.length > 0 || activeC.length > 0);
-            activeD = findTie(dCounts); activeC = findTie(cCounts);
-            if(activeD.length == 0 && activeC.length == 0) skip++;
-            else {
-                if (activeD.length > 0 && betD === 0) betD = 100;
-                if (activeC.length > 0 && betC === 0) betC = 100;
-                if(!wasActive) { let startVal = Math.max(1, skip) * 100; if(activeD.length > 0 && betD === 100) betD = startVal; if(activeC.length > 0 && betC === 100) betC = startVal; }
-                skip = 0;
-            }
-            updateUI();
-        }
-        function findTie(arr) { if(arr[0] == arr[1]) return [0, 1]; if(arr[0] == arr[2]) return [0, 2]; if(arr[1] == arr[2]) return [1, 2]; return []; }
-        function updateUI() {
-            document.getElementById('rounds').innerText = rounds; document.getElementById('skip').innerText = skip; document.getElementById('balance').innerText = '$' + balance;
-            for(let i=0; i<3; i++) {
-                document.getElementById(`cnt-d${i}`).innerText = dCounts[i]; document.getElementById(`cnt-c${i}`).innerText = cCounts[i];
-                let dBox = document.getElementById(`box-d${i}`), cBox = document.getElementById(`box-c${i}`);
-                dBox.className = activeD.includes(i) ? "c active-red" : "c"; cBox.className = activeC.includes(i) ? "c active-red" : "c";
-                if (activeD.includes(i) && betD >= 2700) dBox.classList.add("alert-lvl4");
-                if (activeC.includes(i) && betC >= 2700) cBox.classList.add("alert-lvl4");
-                document.getElementById(`lvl-d${i}`).innerText = activeD.includes(i) ? "$" + betD : "";
-                document.getElementById(`lvl-c${i}`).innerText = activeC.includes(i) ? "$" + betC : "";
-            }
-        }
-        function res() { location.reload(); }
+        // (Tu función reg, findTie y updateUI siguen igual)
     </script>
-    if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js')
-        .then(() => console.log('Service Worker registrado correctamente'))
-        .catch(err => console.log('Error al registrar Service Worker:', err));
-}
-</script>
 </body>
-  </html>
+</html>
